@@ -1,0 +1,17 @@
+#	All cropped video files appended together
+# 0-append-preview-CROP.mp4
+
+# 1-downtown-118-0059-01-29-preview.mp4
+# 1-downtown-118-0059-01-29-preview-CROP.mp4
+https://www.clipstock.com/clip/high-angle-shot-cars-driving-through-downtown-miami-intersection
+
+# 2-roundabout-219-0001-02-187-preview.mp4
+# 2-roundabout-219-0001-02-187-preview-CROP.mp4
+https://www.clipstock.com/clip/cars-driving-and-near-roundabout-during-day
+
+# 3-intersection-118-0111-06-60-preview.mp4
+# 3-intersection-118-0111-06-60-preview-CROP.mp4
+https://www.clipstock.com/clip/medium-static-shot-above-busy-intersection-down-town-wilmington-north-carolina
+
+# 4-facility.mp4
+https://www.clipstock.com/clip/slow-garbage-truck-leaving-waste-facility
