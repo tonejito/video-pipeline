@@ -1,0 +1,55 @@
+diff --git a/demos/real_time_stream_analysis/python/http_visualizer.py b/demos/real_time_stream_analysis/python/http_visualizer.py
+index e4c9ba25..e43c8242 100644
+--- a/demos/real_time_stream_analysis/python/http_visualizer.py
++++ b/demos/real_time_stream_analysis/python/http_visualizer.py
+@@ -24,13 +24,12 @@ import signal
+ 
+ class HttpVisualizer():
+ 
+-	BIND_ADDRESS="localhost" # nosec
+-
+-	def __init__(self, visualizer_port, buffer_size):
++	def __init__(self, buffer_size, visualizer_addr="localhost", visualizer_port="5000"):
+ 		self.logger = get_logger(__name__)
++		self.addr = visualizer_addr
+ 		self.port = visualizer_port
+ 		flask_server = self._make_flask_server()
+-		self.flask_process = multiprocessing.Process(target=flask_server.run, kwargs={"host": self.BIND_ADDRESS,"port": self.port, "debug":False})
++		self.flask_process = multiprocessing.Process(target=flask_server.run, kwargs={"host": self.addr, "port": self.port, "debug":False})
+ 		self.frames_queue = multiprocessing.Queue(maxsize=buffer_size)
+ 		self.logger.info(f"Visualizer frames buffer capacity set to {buffer_size} frames")
+ 
+diff --git a/demos/real_time_stream_analysis/python/real_time_stream_analysis.py b/demos/real_time_stream_analysis/python/real_time_stream_analysis.py
+index a1df212e..16235d47 100644
+--- a/demos/real_time_stream_analysis/python/real_time_stream_analysis.py
++++ b/demos/real_time_stream_analysis/python/real_time_stream_analysis.py
+@@ -31,8 +31,10 @@ def get_config():
+ 	parser.add_argument("--ovms_url", required=True, type=str, help="Address of OVMS gRPC endpoint. Example: localhost:9000")
+ 	parser.add_argument("--model_name", required=True, type=str, help="Name of the target model")
+ 	parser.add_argument("--model_version", required=False, type=int, default=0, help="Version of the taget model. Default: latest available")
+-	parser.add_argument("--visualizer_port", required=False, type=int, help="Port of the inferece results visualizer webservice. "
+-																  			"If not specified, visualizer will not be launched")
++	parser.add_argument("--visualizer_addr", required=False, type=str, default="localhost", help="Address of the inferece results visualizer webservice. "
++																			"If not specified, visualizer will not be launched")
++	parser.add_argument("--visualizer_port", required=False, type=int, default=5000, help="Port of the inferece results visualizer webservice. "
++																			"If not specified, visualizer will not be launched")
+ 	parser.add_argument("--binary_input", required=False, action="store_true", help="Convert frames to binary format before sending them to OVMS. Default: False")
+ 	parser.add_argument("--inference_executors", required=False, type=int, default=4, help="Number of inference executor threads. Default: 4")
+ 	parser.add_argument("--buffer_size", required=False, type=int, default=100, help="Number of frames the have been received from the stream and are awaiting inference or visualization. "
+@@ -46,6 +48,7 @@ def main():
+ 
+ 	config = get_config()
+ 	stream_url = config["stream_url"]
++	visualizer_addr = config["visualizer_addr"]
+ 	visualizer_port = config["visualizer_port"]
+ 	ovms_url = config["ovms_url"]
+ 	model_name = config["model_name"]
+@@ -69,7 +72,7 @@ def main():
+ 	
+ 	inference_manager = InferenceManager(ovms_url, model_name, model_version, inference_executors, binary_input, buffer_size)
+ 	if launch_http_visualizer:
+-		http_visualizer = HttpVisualizer(visualizer_port, buffer_size)
++		http_visualizer = HttpVisualizer(buffer_size, visualizer_addr, visualizer_port)
+ 	else:
+ 		http_visualizer = None
+ 
