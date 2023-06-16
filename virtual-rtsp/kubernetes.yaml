@@ -1,0 +1,118 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: virtual-rtsp
+  labels:
+    app: virtual-rtsp
+data:
+  DOWNLOAD_SOURCE: "true"
+  SOURCE_FORMAT: mp4
+  SOURCE_URL: https://github.com/tonejito/video-pipeline/raw/main/mp4/0-append-preview-CROP.mp4
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: virtual-rtsp
+  labels:
+    app: virtual-rtsp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: virtual-rtsp
+  strategy:
+    # type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: virtual-rtsp
+    spec:
+      containers:
+      - name: virtual-rtsp
+        # image: quay.io/tonejito/virtual-rtsp:latest
+        image: quay.io/tonejito/virtual-rtsp:1.1
+        imagePullPolicy: Always
+        # command:
+        # - sleep
+        # args:
+        # - "3600"
+        ports:
+        # RTMP, RTMPS
+        - containerPort: 1935
+        - containerPort: 1936
+        # RTP, RTCP, mRTP, mRTCP
+        - containerPort: 8000
+        - containerPort: 8001
+        - containerPort: 8002
+        - containerPort: 8003
+        # RTSP, RTSPS
+        - containerPort: 8554
+        - containerPort: 8322
+        # HLS, WebRTC
+        - containerPort: 8888
+        - containerPort: 8889
+        # API, Metrics, pprof
+        - containerPort: 9997
+        - containerPort: 9998
+        - containerPort: 9999
+        envFrom:
+        - configMapRef:
+            name: virtual-rtsp
+        livenessProbe:
+          tcpSocket:
+            port: 8554
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 8554
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        securityContext:
+          privileged: false
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /tmp
+          name: empty-dir
+      volumes:
+      - name: empty-dir
+        emptyDir:
+          sizeLimit: 1Gi
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: virtual-rtsp
+  labels:
+    app: virtual-rtsp
+spec:
+  type: LoadBalancer
+  selector:
+    app: virtual-rtsp
+  ports:
+  - port: 8554
+    protocol: TCP
+    targetPort: 8554
+status:
+  loadBalancer: {}

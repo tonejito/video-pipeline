@@ -1,0 +1,36 @@
+# https://github.com/kerberos-io/virtual-rtsp/blob/master/Dockerfile
+
+# TODO: Migrate from 'aler9/rtsp-simple-server' and 'aler9/rtsp-simple-proxy' to 'bluenviron/mediamtx'
+
+FROM	docker.io/kerberos/virtual-rtsp:1.0.6 AS base
+
+ARG	SOURCE_URL
+ENV	SOURCE_URL=${SOURCE_URL}
+
+# Run everything in WORKDIR
+WORKDIR	/opt
+RUN	mkdir -vp /opt && \
+	touch /opt/server.yml && \
+	mv -v /start-relay.sh /opt && \
+	mv -v /tmp/proxy.yml /opt/proxy.template.yml && \
+	mv -v /tmp/server.yml /opt/server.template.yml && \
+	chown -cR 1001:0 /opt && \
+	chmod -c 0664 /opt/*.yml && \
+	chmod -c 0775 /opt/*.sh
+COPY --chmod=0775 --chown=1001:0 start-relay.sh /opt/
+
+USER	1001
+
+# RTMP, RTMPS
+EXPOSE	1935 1936
+# RTP, RTCP, mRTP, mRTCP
+EXPOSE	8000 8001 8002 8003
+# RTSP, RTSPS
+EXPOSE	8554 8322
+# HLS, WebRTC
+EXPOSE	8888 8889
+# API, Metrics, pprof
+EXPOSE	9997 9998 9999
+
+ENTRYPOINT	[ "/bin/bash" ]
+CMD	["/opt/start-relay.sh"]
