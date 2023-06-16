@@ -42,24 +42,24 @@ spec:
         # args:
         # - "3600"
         ports:
-        # RTMP, RTMPS
-        - containerPort: 1935
-        - containerPort: 1936
-        # RTP, RTCP, mRTP, mRTCP
-        - containerPort: 8000
-        - containerPort: 8001
-        - containerPort: 8002
-        - containerPort: 8003
-        # RTSP, RTSPS
+        # # RTMP, RTMPS
+        # - containerPort: 1935
+        # - containerPort: 1936
+        # # RTP, RTCP, mRTP, mRTCP
+        # - containerPort: 8000
+        # - containerPort: 8001
+        # - containerPort: 8002
+        # - containerPort: 8003
+        # # RTSP, RTSPS
         - containerPort: 8554
-        - containerPort: 8322
-        # HLS, WebRTC
-        - containerPort: 8888
-        - containerPort: 8889
-        # API, Metrics, pprof
-        - containerPort: 9997
-        - containerPort: 9998
-        - containerPort: 9999
+        # - containerPort: 8322
+        # # HLS, WebRTC
+        # - containerPort: 8888
+        # - containerPort: 8889
+        # # API, Metrics, pprof
+        # - containerPort: 9997
+        # - containerPort: 9998
+        # - containerPort: 9999
         env:
         - name: DOWNLOAD_SOURCE
           value: "true"
