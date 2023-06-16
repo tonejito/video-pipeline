@@ -58,9 +58,9 @@ get-model:
 	test -f ${WORKSPACE_DIR}/1/${MODEL_ID}.xml || \
 	  wget -c -nv -P ${WORKSPACE_DIR}/1 ${MODEL_URL}/${MODEL_ID}.xml
 
-
 # https://github.com/openvinotoolkit/model_server (2023.0)
-MODEL_SERVER_CONTAINER=docker.io/openvino/model_server:2023.0
+# MODEL_SERVER_CONTAINER=docker.io/openvino/model_server:2023.0
+MODEL_SERVER_CONTAINER=quay.io/tonejito/openvino-model_server:2023.0
 openvino-model-server:	get-model
 	docker run -it --rm --name ovms \
 	  -v $(CURDIR)/workspace/${MODEL_ID}:/model \
