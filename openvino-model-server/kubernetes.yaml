@@ -1,0 +1,153 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openvino-model-server
+  labels:
+    app: openvino-model-server
+data:
+  OVMS_PORT: "9000"
+  MODEL_NAME: "person-vehicle-bike-detection"
+  MODEL_ID: "person-vehicle-bike-detection-2002"
+  MODEL_URL: https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/2/person-vehicle-bike-detection-2002/FP32
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openvino-model-server
+  labels:
+    app: openvino-model-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openvino-model-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: openvino-model-server
+    spec:
+      containers:
+      - name: openvino-model-server
+        image: quay.io/tonejito/openvino-model_server:2023.0
+        imagePullPolicy: Always
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - "/ovms/bin/ovms --model_path ${WORKSPACE_DIR} --model_name ${MODEL_NAME} --layout 'NHWC:NCHW' --port ${OVMS_PORT}"
+        ports:
+        - containerPort: 9000
+        env:
+        - name: WORKSPACE_DIR
+          value: "/model"
+        envFrom:
+        - configMapRef:
+            name: openvino-model-server
+        livenessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        securityContext:
+          privileged: false
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /tmp
+          name: empty-dir
+      volumes:
+      - name: empty-dir
+        emptyDir:
+          sizeLimit: 1Gi
+status: {}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: openvino-model-server
+#   labels:
+#     app: openvino-model-server
+# spec:
+#   type: ClusterIP
+#   selector:
+#     app: openvino-model-server
+#   ports:
+#   - port: 9000
+#     protocol: TCP
+#     targetPort: 9000
+# status:
+#   loadBalancer: {}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: openvino-model-server
+#   labels:
+#     app: openvino-model-server
+# spec:
+#   type: NodePort
+#   selector:
+#     app: openvino-model-server
+#   ports:
+#   - port: 9000
+#     protocol: TCP
+#     targetPort: 9000
+# status:
+#   loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openvino-model-server
+  labels:
+    app: openvino-model-server
+spec:
+  type: LoadBalancer
+  selector:
+    app: openvino-model-server
+  ports:
+  - port: 9000
+    protocol: TCP
+    targetPort: 9000
+status:
+  loadBalancer: {}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: openvino-model-server
+#   labels:
+#     app: openvino-model-server
+# spec:
+#   type: ExternalName
+#   externalName: openvino-model-server
+#   selector:
+#     app: openvino-model-server
+#   ports:
+#   - port: 9000
+#     protocol: TCP
+#     targetPort: 9000
+# status:
+#   loadBalancer: {}

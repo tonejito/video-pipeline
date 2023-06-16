@@ -1,0 +1,35 @@
+# https://github.com/openvinotoolkit/model_server (2023.0)
+# https://github.com/openvinotoolkit/model_server/blob/main/Dockerfile.ubuntu
+
+# https://github.com/containers/podman/issues/8477
+# Default SHELL is ["/bin/sh", "-c"]
+# The upstream container overrides that definition with
+# SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+# And we must pass the '--format docker' flag to podman when building
+# podman build --format docker -t ${TAG} .
+
+FROM	docker.io/openvino/model_server:2023.0 AS base
+
+ENV	PAGER=cat \
+	TERM=linux \
+	NO_COLOR=1 \
+	NO_PROMPT=1 \
+	WORKSPACE_DIR=/model \
+	MODEL_NAME=person-vehicle-bike-detection
+	# MODEL_ID=${MODEL_NAME}-2002 \
+	# MODEL_URL=https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/2/${MODEL_ID}/FP32 \
+
+USER	root
+
+RUN	mkdir -vp ${WORKSPACE_DIR}/1 && \
+	MODEL_ID=${MODEL_NAME}-2002 ; \
+	MODEL_URL=https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/2/${MODEL_ID}/FP32 ; \
+	set -x ; \
+	for EXT in bin xml ; \
+	do \
+	  curl -fsSL -o ${WORKSPACE_DIR}/1/${MODEL_ID}.${EXT} ${MODEL_URL}/${MODEL_ID}.${EXT} ; \
+	done ; \
+	ls -lA ${WORKSPACE_DIR}/1
+
+# uid=5000(ovms) gid=5000(ovms) groups=5000(ovms),39(irc),44(video)
+USER	5000
