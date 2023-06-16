@@ -37,13 +37,15 @@ default:
 	@echo ""
 
 # https://github.com/kerberos-io/virtual-rtsp
+# VIRTUAL_RTSP_CONTAINER=docker.io/kerberos/virtual-rtsp:1.0.6
+VIRTUAL_RTSP_CONTAINER=quay.io/tonejito/virtual-rtsp:1.1
 rtsp:
 	docker run -it --rm --name virtual-rtsp \
 	  -v $(CURDIR)/mp4:/samples \
 	  -p ${RTSP_PORT}:${RTSP_PORT} \
 	  -e SOURCE_URL=file:///samples/${INPUT_VIDEO} \
 	  --restart=${RESTART} \
-	  docker.io/kerberos/virtual-rtsp:1.0.6 \
+	  ${VIRTUAL_RTSP_CONTAINER} \
 	;
 
 # https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/2/person-vehicle-bike-detection-2002/FP32/person-vehicle-bike-detection-2002.bin
@@ -58,12 +60,13 @@ get-model:
 
 
 # https://github.com/openvinotoolkit/model_server (2023.0)
+MODEL_SERVER_CONTAINER=docker.io/openvino/model_server:2023.0
 openvino-model-server:	get-model
 	docker run -it --rm --name ovms \
 	  -v $(CURDIR)/workspace/${MODEL_ID}:/model \
 	  -p ${OVMS_PORT}:${OVMS_PORT} \
 	  --restart=${RESTART} \
-	  docker.io/openvino/model_server:2023.0 \
+	  ${MODEL_SERVER_CONTAINER} \
 	    --model_path /model \
 	    --model_name ${MODEL_NAME} \
 	    --layout NHWC:NCHW \
@@ -71,11 +74,12 @@ openvino-model-server:	get-model
 	;
 
 # https://docs.openvino.ai/2022.3/ovms_demo_real_time_stream_analysis.html
+STREAM_ANALYSIS_CONTAINER=quay.io/tonejito/openvino-stream-analysis:v2023.0
 openvino-stream-analysis:
 	docker run -it --rm --name video-analysis \
 	  -p ${VISUALIZER_PORT}:${VISUALIZER_PORT} \
 	  --restart=${RESTART} \
-	  quay.io/tonejito/openvino-stream-analysis:v2023.0 \
+	  ${STREAM_ANALYSIS_CONTAINER} \
 	    --stream_url '${STREAM_URL}' \
 	    --ovms_url '${OVMS_URL}' \
 	    --model_name '${MODEL_NAME}' \
