@@ -1,5 +1,9 @@
 # Video processing pipeline
 
+| ![](img/video-pipeline.drawio.png)
+|:------------------------------------------------:|
+| OpenVINO video realtime stream analysis pipeline
+
 This AI video processing pipeline implementation uses an MP4 source file that is converted to an RTSP stream with the code from `virtual-rtsp`.
 
 - <https://github.com/kerberos-io/virtual-rtsp>
