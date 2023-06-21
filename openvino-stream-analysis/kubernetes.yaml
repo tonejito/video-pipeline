@@ -1,0 +1,100 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openvino-stream-analysis
+  labels:
+    app: openvino-stream-analysis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openvino-stream-analysis
+  strategy:
+    # type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: openvino-stream-analysis
+    spec:
+      containers:
+      - name: openvino-stream-analysis
+        image: quay.io/tonejito/openvino-stream-analysis:v2023.0
+        imagePullPolicy: Always
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - "python3 real_time_stream_analysis.py --stream_url ${STREAM_URL} --ovms_url ${OVMS_URL} --model_name ${MODEL_NAME} --visualizer_addr ${VISUALIZER_HOST} --visualizer_port ${VISUALIZER_PORT}"
+        ports:
+        - containerPort: 5000
+        env:
+        - name: STREAM_URL
+          value: "rtsp://192.168.50.20:8554/stream"
+        - name: OVMS_URL
+          value: "192.168.50.21:9000"
+        - name: MODEL_NAME
+          value: "person-vehicle-bike-detection"
+        - name: VISUALIZER_HOST
+          value: "0.0.0.0"
+        - name: VISUALIZER_PORT
+          value: "5000"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        securityContext:
+          privileged: false
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /tmp
+          name: empty-dir
+      volumes:
+      - name: empty-dir
+        emptyDir:
+          sizeLimit: 1Gi
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openvino-stream-analysis
+  name: openvino-stream-analysis
+spec:
+  ports:
+  - port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: openvino-stream-analysis
+  type: ClusterIP
+status: {}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app: openvino-stream-analysis
+  name: openvino-stream-analysis
+spec:
+  port:
+    targetPort: 5000
+  to:
+    kind: Service
+    name: openvino-stream-analysis
+    weight: 100
+status: {}
